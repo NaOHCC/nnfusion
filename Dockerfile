@@ -9,29 +9,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libgtest-dev libprotobuf-dev protobuf-compiler libgflags-dev libsqlite3-dev llvm-dev \
   && apt-get clean autoclean && rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
 
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.1.0-1-Linux-x86_64.sh -O install_miniconda.sh && \
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.11.1-0-Linux-x86_64.sh -O install_miniconda.sh && \
   bash install_miniconda.sh -b -p /opt/conda && rm install_miniconda.sh
 ENV PATH="/opt/conda/bin:${PATH}"
 
 RUN conda install python~=3.10 pip cmake && conda clean --all
 
 RUN pip install --no-cache-dir --default-timeout=1000 torch==1.12 torchvision==0.13 timm==0.5.4 einops \
-    onnx==1.12 onnxruntime-gpu==1.12 onnxconverter_common==1.12 \
-    attrs cloudpickle decorator psutil synr tornado xgboost==1.5.0 regex pandas pytest \
-    && rm -rf ~/.cache/pip
+  onnx==1.12 onnxruntime-gpu==1.12 onnxconverter_common==1.12 \
+  attrs cloudpickle decorator psutil synr tornado xgboost==1.5.0 regex pandas pytest \
+  && rm -rf ~/.cache/pip
 
-RUN git clone https://github.com/nox-410/tvm --recursive -b welder \
-  && mkdir tvm/build && cd tvm/build && cp ../cmake/config.cmake . \
+RUN git clone https://gh.llkk.cc/https://github.com/nox-410/tvm --recursive -b welder 
+RUN git clone https://gh.llkk.cc/https://github.com/nox-410/nnfusion -b welder 
+RUN git clone https://gh.llkk.cc/https://github.com/nox-410/cutlass -b welder
+
+RUN mkdir tvm/build && cd tvm/build && cp ../cmake/config.cmake . \
   && echo "set(USE_LLVM ON)" >> config.cmake && echo "set(USE_CUDA ON)" >> config.cmake \
-  && cmake .. && make -j
+  && cmake .. && make -j 56
 ENV PYTHONPATH /root/tvm/python:$PYTHONPATH
 
-RUN git clone https://github.com/nox-410/nnfusion -b welder \
-  && mkdir nnfusion/build \
-  && cd nnfusion/build && cmake .. && make -j
+RUN cp /opt/conda/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && mkdir nnfusion/build \
+  && cd nnfusion/build && cmake .. && make -j 56
 ENV PATH /root/nnfusion/build/src/tools/nnfusion:$PATH
 
-RUN git clone https://github.com/nox-410/cutlass -b welder
 ENV CPLUS_INCLUDE_PATH /root/cutlass/include:$CPLUS_INCLUDE_PATH
 
 COPY . welder/
