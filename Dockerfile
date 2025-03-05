@@ -1,6 +1,6 @@
 FROM nvcr.io/nvidia/cuda:11.0.3-cudnn8-devel-ubuntu20.04
 
-WORKDIR /root
+WORKDIR /workspace
 
 RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment
 
@@ -27,15 +27,15 @@ RUN git clone https://gh.llkk.cc/https://github.com/nox-410/cutlass -b welder
 RUN mkdir tvm/build && cd tvm/build && cp ../cmake/config.cmake . \
   && echo "set(USE_LLVM ON)" >> config.cmake && echo "set(USE_CUDA ON)" >> config.cmake \
   && cmake .. && make -j 56
-ENV PYTHONPATH /root/tvm/python:$PYTHONPATH
+ENV PYTHONPATH /workspace/tvm/python:$PYTHONPATH
 
 RUN cp /opt/conda/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && mkdir nnfusion/build \
   && cd nnfusion/build && cmake .. && make -j 56
-ENV PATH /root/nnfusion/build/src/tools/nnfusion:$PATH
+ENV PATH /workspace/nnfusion/build/src/tools/nnfusion:$PATH
 
-ENV CPLUS_INCLUDE_PATH /root/cutlass/include:$CPLUS_INCLUDE_PATH
+ENV CPLUS_INCLUDE_PATH /workspace/cutlass/include:$CPLUS_INCLUDE_PATH
 
-COPY . welder/
-ENV PYTHONPATH /root/welder/python:$PYTHONPATH
+# COPY . welder/
+# ENV PYTHONPATH /root/welder/python:$PYTHONPATH
 
 CMD bash
